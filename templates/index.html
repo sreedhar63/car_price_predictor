@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Car Price Prediction</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --glass-bg: rgba(255,255,255,0.85);
+      --accent-1: #5468ff;
+      --accent-2: #7b61ff;
+      --muted: #6b7280;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg,#0f172a 0%, #0b1220 40%, #081226 100%);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      padding: 2rem;
+      color: #0b1220;
+    }
+
+    .app-card {
+      width: 100%;
+      max-width: 900px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 35px rgba(2,6,23,0.6);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.03);
+      display: grid;
+      grid-template-columns: 1fr 420px;
+    }
+
+    /* Left (form) */
+    .left-pane {
+      padding: 34px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.0));
+    }
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .brand .logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      background: linear-gradient(135deg,var(--accent-1), var(--accent-2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 6px 18px rgba(99,102,241,0.25);
+    }
+    h1.title {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: white;
+    }
+    p.lead {
+      margin: 6px 0 22px 0;
+      color: #cbd5e1;
+    }
+
+    .form-section {
+      background: var(--glass-bg);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #0b1220;
+    }
+    .form-control, .form-select {
+      border-radius: 10px;
+      padding: .75rem .9rem;
+      background: white;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      box-shadow: none;
+    }
+
+    .right-pane {
+      padding: 34px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.0));
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preview-card {
+      width: 100%;
+      max-width: 330px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.92));
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 8px 28px rgba(2,6,23,0.08);
+    }
+    .price {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent-1);
+      letter-spacing: -0.02em;
+    }
+    .meta {
+      color: var(--muted);
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    .small-muted {
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+
+    .btn-predict {
+      margin-top: 14px;
+      width: 100%;
+      border-radius: 12px;
+      padding: .9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      background: linear-gradient(90deg,var(--accent-1),var(--accent-2));
+      color: white;
+      border: none;
+      box-shadow: 0 8px 20px rgba(99,102,241,0.18);
+    }
+
+    @media (max-width: 920px) {
+      .app-card {
+        grid-template-columns: 1fr;
+      }
+      .right-pane {
+        order: -1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-card">
+    <!-- LEFT: Form -->
+    <div class="left-pane">
+      <div class="brand">
+        <div class="logo">CP</div>
+        <div>
+          <h1 class="title">Car Price Predictor</h1>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <!-- Make sure your Flask route is /predict and method POST -->
+        <form action="/predict" method="POST" id="predictForm">
+          <!-- Company -->
+          <div class="mb-3">
+            <label for="company">Company Name</label>
+            <select id="company" name="company" onchange="load_car_models('company','car_model')" class="form-select" required>
+              <option value="" selected disabled>Choose company</option>
+              {% for c in companies %}
+                <option value="{{c}}">{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Model -->
+          <div class="mb-3">
+            <label for="car_model">Car Model</label>
+            <select id="car_model" name="car_model"  class="form-select" required>
+              <option value="" selected disabled>Choose model</option>
+          
+            </select>
+          </div>
+
+          <!-- Year -->
+          <div class="mb-3">
+            <label for="year">Year of Purchase</label>
+            <select id="year" name="year" class="form-select" required>
+              <option value="" selected disabled>Choose year</option>
+              {% for y in years %}
+                <option value="{{ y }}">{{ y }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+
+          <!-- Fuel Type -->
+          <div class="mb-3">
+            <label for="fuel_type">Fuel Type</label>
+            <select id="fuel_type" name="fuel_type" class="form-select" required>
+              <option value="" selected disabled>Choose fuel type</option>
+              {% for f in fuel_types %}
+                <option value="{{ f }}">{{ f }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+           <!-- Number of Kilometers -->
+          <div class="mb-3">
+            <label for="kilo">Number of Kilometers</label>
+            <input id="kilo_driven" name="kilo_driven" type="number" min="100" max="1000000" placeholder="Kilometers driven" class="form-control" required>
+          </div>
+
+
+
+          <!-- Predict Button -->
+          <button type="submit" class="btn btn-predict" onclick="">Predict Price</button>
+        </form>
+      </div>
+
+    
+
+      
+    </div>
+
+    <!-- RIGHT: Preview / Result -->
+    <div class="right-pane">
+      <div class="preview-card">
+        <div style="display:flex; gap:12px; align-items:center; justify-content:center; margin-bottom:10px;">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M3 13l2-6h13l2 6" stroke="#1f2937" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="M5 13v5a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h8v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-5" stroke="#1f2937" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          <div style="text-align:left;">
+            <div class="meta">Estimated Price</div>
+            <div class="price">
+              {% if prediction %}
+                ₹ {{ prediction }}
+              {% else %}
+                --
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; justify-content:space-between; margin-top:8px;">
+          <div>
+            <div class="small-muted">Company</div>
+            <div style="font-weight:700;">{{ selected_company or '-' }}</div>
+          </div>
+          <div>
+            <div class="small-muted">Model</div>
+            <div style="font-weight:700;">{{ selected_model or '-' }}</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; justify-content:space-between; margin-top:10px;">
+          <div>
+            <div class="small-muted">Year</div>
+            <div style="font-weight:700;">{{ selected_year or '-' }}</div>
+          </div>
+          <div>
+            <div class="small-muted">Fuel</div>
+            <div style="font-weight:700;">{{ selected_fuel or '-' }}</div>
+          </div>
+        </div>
+        <div>
+          <div>
+            <div class="small-muted">Kilo meters</div>
+            <div style="font-weight:700;">{{ selected_kilo or '-' }}</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <small class="small-muted">Quick tip: For better results provide the correct year & model variant.</small>
+        </div>
+      </div>
+
+      <!-- Optional: small help card -->
+      <div style="width:100%; max-width:330px; text-align:center;">
+        <div style="background: rgba(255,255,255,0.04); padding:12px; border-radius:10px;">
+          <div class="row">
+        <div class="col-12" style="text-align: center;">
+          <h3><span id="prediction" class="text-white">{% if prediction %} <h2 class="text-danger">Estimated Price:</h2> ₹ {{ prediction }}{% endif %}</span></h3>
+        </div>
+      </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Client-side script for AJAX + preview updates -->
+ <script>
+  
+function load_car_models(company_id, car_model_id) {
+    var company = document.getElementById(company_id);
+    var car_model = document.getElementById(car_model_id);
+
+    // Reset car_model dropdown
+    car_model.innerHTML = "";
+
+    // All car models dictionary generated by Jinja (company -> models)
+    var carModelsDict = {{ car_models | tojson }};
+
+    // Get selected company
+    var selectedCompany = company.value;
+
+    if (selectedCompany in carModelsDict) {
+        var models = carModelsDict[selectedCompany];
+
+        models.forEach(function(model) {
+            var newOption = document.createElement("option");
+            newOption.value = model;
+            newOption.innerHTML = model;
+            car_model.options.add(newOption);
+        });
+    }
+}
+
+
+
+
+
+
+
+
+  const form = document.getElementById('predictForm');
+  const companyEl = document.getElementById('company');
+  const modelEl = document.getElementById('car_model');
+  const yearEl = document.getElementById('year');
+  const fuelEl = document.getElementById('fuel_type');
+  const kiloEl = document.getElementById('kilo_driven');
+
+  function updatePreview() {
+    const selCompany = companyEl.value || '-';
+    const selModel = modelEl.value || '-';
+    const selYear = yearEl.value || '-';
+    const selFuel = fuelEl.value || '-';
+    const selKilo = kiloEl.value || '-';
+
+    const strongs = document.querySelectorAll('.preview-card div[style*="font-weight:700;"]');
+    if(strongs.length >= 5){
+      strongs[0].innerText = selCompany;
+      strongs[1].innerText = selModel;
+      strongs[2].innerText = selYear;
+      strongs[3].innerText = selFuel;
+      strongs[4].innerText = selKilo;
+    }
+  }
+
+  [companyEl, modelEl, yearEl, fuelEl, kiloEl].forEach(el => {
+    if(el){
+      el.addEventListener('change', updatePreview);
+      el.addEventListener('keyup', updatePreview);
+    }
+  });
+
+  form.addEventListener('submit', function(event){
+    event.preventDefault();
+    send_data(form);
+  });
+
+  function send_data(){
+    const fd = new FormData(document.querySelector('form'));
+    const xhr = new XMLHttpRequest();
+
+    document.getElementById("prediction").innerHTML = "Wait, predicting price...";
+
+    xhr.open('POST', '/predict', true);
+
+    xhr.onreadystatechange = function() {
+      if(xhr.readyState == XMLHttpRequest.DONE){
+        try {
+          const resp = JSON.parse(xhr.responseText);
+          if(resp.prediction){
+            document.getElementById("prediction").innerHTML =
+              'Estimated Price: ₹ ' + resp.prediction.toFixed(2);
+          } else if(resp.error){
+            document.getElementById("prediction").innerHTML =
+              'Error: ' + resp.error;
+          }
+        } catch(e){
+          document.getElementById("prediction").innerHTML =
+            'Unexpected response: ' + xhr.responseText;
+        }
+      }
+    };
+    xhr.send(fd);
+  }
+
+  updatePreview();
+</script>
+
+
+</body>
+</html>
