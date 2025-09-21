@@ -1,2 +1,3 @@
 # car_price_predictor
-![Uploading Screenshot 2025-09-21 144525.png…]()
+<img width="1435" height="885" alt="Image" src="https://github.com/user-attachments/assets/6353fa94-a43e-4478-afa4-fc36cb8db551" />
+
